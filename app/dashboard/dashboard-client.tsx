@@ -157,10 +157,10 @@ export default function DashboardClient({
                   id="jarvis-setup-guide-heading"
                   className="text-lg font-semibold tracking-tight text-cyan-200 neon-text md:text-xl"
                 >
-                  J.A.R.V.I.S. 시작 가이드 (초기 설정)
+                  J.A.R.V.I.S. Setup Guide
                 </h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  설치 후 아래 순서대로 진행하면 바로 사용할 수 있어요.
+                  After installation, complete these steps in order for a smooth first run.
                 </p>
 
                 <ol className="mt-6 space-y-4">
@@ -175,17 +175,31 @@ export default function DashboardClient({
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-white">Step 1: 필수 권한 허용</h3>
+                      <h3 className="font-semibold text-white">
+                        Step 1: System Permissions &amp; Security
+                      </h3>
                       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                        앱 실행 후 마이크 권한과 화면 및 시스템 오디오 녹음 권한 요청 팝업이 뜨면 반드시{" "}
-                        <strong className="text-cyan-200">&apos;허용&apos;</strong>을 눌러주세요.
+                        If you see a security warning on the first launch, go to{" "}
+                        <strong className="text-slate-100">System Settings</strong> &gt;{" "}
+                        <strong className="text-slate-100">Privacy &amp; Security</strong> and
+                        click <strong className="text-cyan-200">&apos;Open Anyway&apos;</strong>{" "}
+                        for JARVIS to allow access.
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                        When prompted, please grant permissions for both the{" "}
+                        <strong className="text-cyan-200">&apos;Microphone&apos;</strong> and{" "}
+                        <strong className="text-cyan-200">
+                          &apos;Screen &amp; System Audio Recording&apos;
+                        </strong>
+                        .
                       </p>
                       <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
-                        (팁: 권한을 켰는데도 작동하지 않는다면 앱을 완전히 종료{" "}
+                        <span className="font-medium text-amber-200/95">Tip:</span> If features are
+                        not responding after granting permissions, fully quit the app (
                         <kbd className="rounded border border-slate-600 bg-slate-800 px-1.5 py-0.5 font-mono text-[0.7rem] text-slate-200">
                           Cmd+Q
                         </kbd>
-                        한 후 다시 실행해 보세요.)
+                        ) and restart it.
                       </p>
                     </div>
                   </li>
@@ -201,14 +215,14 @@ export default function DashboardClient({
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-white">Step 2: AI 두뇌 활성화</h3>
+                      <h3 className="font-semibold text-white">Step 2: Activate AI Brain</h3>
                       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                        자비스 메인 화면 오른쪽 상단의{" "}
-                        <strong className="text-violet-200">톱니바퀴 아이콘(OpenAI 설정)</strong>을
-                        클릭하세요.
+                        Click the <strong className="text-violet-200">Gear Icon (OpenAI Settings)</strong>{" "}
+                        located in the top-right corner of the dashboard.
                       </p>
                       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                        본인의 OpenAI API Key를 입력하면 모든 AI 비서 기능이 활성화됩니다.
+                        Enter your personal OpenAI API Key to fully activate all AI assistant
+                        functionalities.
                       </p>
                     </div>
                   </li>
