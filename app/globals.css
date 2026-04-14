@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #040816;
+  --foreground: #e6eeff;
+  --neon-cyan: #30f2ff;
+  --neon-violet: #9f7aea;
+  --panel: #0a1028cc;
 }
 
 @theme inline {
@@ -12,15 +15,30 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(circle at 15% 20%, #1239a91a 0, transparent 35%),
+    radial-gradient(circle at 80% 10%, #7f5af01f 0, transparent 30%),
+    linear-gradient(to right, #19345f26 1px, transparent 1px),
+    linear-gradient(to bottom, #19345f26 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    34px 34px,
+    34px 34px;
+}
+
+.neon-text {
+  text-shadow:
+    0 0 8px #30f2ff80,
+    0 0 28px #30f2ff47;
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid #2f5a9980;
+  backdrop-filter: blur(8px);
 }
