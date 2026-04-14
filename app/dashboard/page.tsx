@@ -27,9 +27,12 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      email={user.email ?? "Unknown email"}
+      email={user.email ?? ""}
+      userId={user.id}
       hasAccess={Boolean(data?.has_access)}
       checkoutUrl={env.lemonCheckoutUrl}
+      downloadUrl={env.jarvisDownloadUrl}
+      downloadFileName={env.jarvisDownloadFileName}
     />
   );
 }

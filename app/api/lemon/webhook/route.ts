@@ -20,10 +20,76 @@ function verifyLemonSignature(rawBody: string, signatureHeader: string | null, s
   return timingSafeEqual(digest, signature);
 }
 
+type Meta = {
+  event_name?: string;
+  custom_data?: Record<string, unknown>;
+  passthrough?: unknown;
+};
+
 type Payload = {
-  meta?: { event_name?: string; custom_data?: Record<string, unknown> };
+  meta?: Meta;
   data?: { attributes?: Record<string, unknown> };
 };
+
+function stringifyId(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(Math.trunc(value));
+  return undefined;
+}
+
+function readUserIdFromRecord(record: Record<string, unknown> | undefined): string | undefined {
+  if (!record) return undefined;
+  const keys = ["user_id", "supabase_user_id", "supabaseUserId", "userId", "uid"];
+  for (const key of keys) {
+    const id = stringifyId(record[key]);
+    if (id) return id;
+  }
+  return undefined;
+}
+
+/**
+ * Resolves internal user id from Lemon `meta.custom_data`, optional nested `custom`,
+ * and `meta.passthrough` (string JSON or object).
+ */
+function extractPassthroughUserId(meta: Meta | undefined): string | undefined {
+  if (!meta) return undefined;
+
+  const custom = meta.custom_data;
+  if (custom && typeof custom === "object") {
+    const direct = readUserIdFromRecord(custom as Record<string, unknown>);
+    if (direct) return direct;
+
+    const nested = (custom as Record<string, unknown>).custom;
+    if (nested && typeof nested === "object") {
+      const nestedId = readUserIdFromRecord(nested as Record<string, unknown>);
+      if (nestedId) return nestedId;
+    }
+  }
+
+  const raw = meta.passthrough;
+  if (raw == null) return undefined;
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return undefined;
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const fromJson = readUserIdFromRecord(parsed as Record<string, unknown>);
+        if (fromJson) return fromJson;
+      }
+    } catch {
+      // plain string id
+    }
+    return stringifyId(trimmed);
+  }
+
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return readUserIdFromRecord(raw as Record<string, unknown>);
+  }
+
+  return undefined;
+}
 
 function readCheckoutEmail(payload: Payload) {
   const custom = payload.meta?.custom_data ?? {};
@@ -33,7 +99,11 @@ function readCheckoutEmail(payload: Payload) {
     (typeof custom.email === "string" && custom.email) ||
     (typeof custom.user_email === "string" && custom.user_email);
   const fromOrder =
-    typeof attrs.user_email === "string" ? attrs.user_email : undefined;
+    typeof attrs.user_email === "string"
+      ? attrs.user_email
+      : typeof attrs.email === "string"
+        ? attrs.email
+        : undefined;
 
   const raw = fromCustom || fromOrder;
   return raw?.trim() || undefined;
@@ -80,17 +150,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: true, event_name: eventName });
   }
 
-  const customData = payload.meta?.custom_data ?? {};
-  const userIdFromCheckout =
-    (typeof customData.user_id === "string" && customData.user_id) ||
-    (typeof customData.supabase_user_id === "string" && customData.supabase_user_id) ||
-    undefined;
-
   const checkoutEmail = readCheckoutEmail(payload);
+  const candidateUserId = extractPassthroughUserId(payload.meta);
 
-  if (!userIdFromCheckout && !checkoutEmail) {
+  if (!candidateUserId && !checkoutEmail) {
     return NextResponse.json(
-      { error: "No user_id or checkout email in webhook payload" },
+      { error: "No user_id (custom_data/passthrough) or checkout email in webhook payload" },
       { status: 400 },
     );
   }
@@ -116,7 +181,16 @@ export async function POST(request: Request) {
 
   const now = new Date().toISOString();
 
-  let resolvedUserId: string | null = userIdFromCheckout ?? null;
+  let resolvedUserId: string | null = null;
+  let resolvedAuthEmail: string | null = null;
+
+  if (candidateUserId) {
+    const { data, error } = await admin.auth.admin.getUserById(candidateUserId);
+    if (!error && data?.user?.id) {
+      resolvedUserId = data.user.id;
+      resolvedAuthEmail = data.user.email ?? null;
+    }
+  }
 
   if (!resolvedUserId && checkoutEmail) {
     resolvedUserId = await findAuthUserIdByEmail(admin, checkoutEmail);
@@ -127,8 +201,9 @@ export async function POST(request: Request) {
           skipped: true,
           reason: "no_registered_user_for_checkout_email",
           detail:
-            "No matching row in auth.users for this checkout email. The user must sign up in your app before the purchase can unlock downloads.",
+            "No matching auth.users row for checkout email, and custom_data/passthrough user_id was missing or invalid.",
           email: checkoutEmail,
+          had_candidate_user_id: Boolean(candidateUserId),
         },
         { status: 200 },
       );
@@ -137,12 +212,19 @@ export async function POST(request: Request) {
 
   if (!resolvedUserId) {
     return NextResponse.json(
-      { error: "Could not resolve Supabase user id" },
+      {
+        error: "Could not resolve Supabase user id",
+        had_candidate_user_id: Boolean(candidateUserId),
+      },
       { status: 400 },
     );
   }
 
-  const emailForRow = checkoutEmail ?? (typeof customData.email === "string" ? customData.email : null);
+  const customData = payload.meta?.custom_data ?? {};
+  const emailForRow =
+    checkoutEmail?.trim() ??
+    (typeof customData.email === "string" ? customData.email.trim() : null) ??
+    resolvedAuthEmail;
 
   const { error } = await admin.from("user_access").upsert(
     {
@@ -161,6 +243,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     user_id: resolvedUserId,
+    matched_by: candidateUserId && resolvedUserId === candidateUserId ? "custom_data_or_passthrough" : "email",
     event_name: eventName,
   });
 }

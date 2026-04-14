@@ -25,16 +25,9 @@ export async function middleware(request: NextRequest) {
 
   await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/downloads/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.searchParams.set("download", "blocked");
-    return NextResponse.redirect(url);
-  }
-
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/:path*", "/downloads/:path*"],
+  matcher: ["/dashboard/:path*", "/auth/:path*"],
 };

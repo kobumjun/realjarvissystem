@@ -1,15 +1,27 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { buildLemonCheckoutUrl } from "@/lib/lemon/build-checkout-url";
 
 type Props = {
   email: string;
+  userId: string;
   hasAccess: boolean;
   checkoutUrl: string;
+  downloadUrl: string;
+  downloadFileName: string;
 };
 
-export default function DashboardClient({ email, hasAccess, checkoutUrl }: Props) {
+export default function DashboardClient({
+  email,
+  userId,
+  hasAccess,
+  checkoutUrl,
+  downloadUrl,
+  downloadFileName,
+}: Props) {
   const router = useRouter();
 
   const onSignOut = async () => {
@@ -19,6 +31,11 @@ export default function DashboardClient({ email, hasAccess, checkoutUrl }: Props
     router.refresh();
   };
 
+  const checkoutHref = useMemo(() => {
+    if (!checkoutUrl || hasAccess) return checkoutUrl;
+    return buildLemonCheckoutUrl(checkoutUrl, { email, userId });
+  }, [checkoutUrl, email, userId, hasAccess]);
+
   return (
     <main className="min-h-screen px-6 py-10">
       <section className="glass-panel mx-auto w-full max-w-3xl rounded-2xl p-8">
@@ -26,7 +43,7 @@ export default function DashboardClient({ email, hasAccess, checkoutUrl }: Props
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">Dashboard</p>
             <h1 className="mt-2 text-3xl font-bold text-white">Jarvis for Mac Access</h1>
-            <p className="mt-2 text-slate-300">{email}</p>
+            <p className="mt-2 text-slate-300">{email || "Unknown email"}</p>
           </div>
           <button
             onClick={onSignOut}
@@ -41,7 +58,10 @@ export default function DashboardClient({ email, hasAccess, checkoutUrl }: Props
             <>
               <p className="text-sm text-emerald-300">Payment confirmed. Download unlocked.</p>
               <a
-                href="/api/download"
+                href={downloadUrl}
+                download={downloadFileName}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="mt-4 inline-flex rounded-lg bg-cyan-400 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-300"
               >
                 Download .dmg for Mac
@@ -55,7 +75,7 @@ export default function DashboardClient({ email, hasAccess, checkoutUrl }: Props
               </p>
               {checkoutUrl ? (
                 <a
-                  href={checkoutUrl}
+                  href={checkoutHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex rounded-lg bg-violet-400 px-5 py-3 font-semibold text-slate-950 hover:bg-violet-300"
