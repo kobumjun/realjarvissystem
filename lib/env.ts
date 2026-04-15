@@ -1,6 +1,6 @@
-/** Google Drive direct download (uc?export=download); override via env if needed. */
+/** Google Drive file link; override via env if needed. */
 const DEFAULT_JARVIS_DOWNLOAD_URL =
-  "https://drive.google.com/uc?export=download&id=1GdIZGeiVsOhkY1sYo-GahgTBXAYgmW0f";
+  "https://drive.google.com/file/d/10eRau8S9RyQ6Ry_y8UOggmpEoFQw6ic4/view?usp=sharing";
 
 export const env = {
   // ── Public (browser-safe) ──────────────────────────────

@@ -27,6 +27,11 @@ const _requestTypes = {
     label: "Chat",
     description: "Standard AI conversation (1 turn)",
   },
+  transcribe: {
+    cost: 1,
+    label: "Transcribe",
+    description: "Whisper speech-to-text (1 audio clip)",
+  },
   voice: {
     cost: 2,
     label: "Voice",

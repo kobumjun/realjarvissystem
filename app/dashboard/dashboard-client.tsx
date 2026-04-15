@@ -79,9 +79,10 @@ function IconShield({ className }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 const TYPE_STYLE: Record<string, { bg: string; text: string; label: string }> = {
-  chat:     { bg: "bg-cyan-500/15 border-cyan-500/30",   text: "text-cyan-300",    label: "Chat" },
-  voice:    { bg: "bg-violet-500/15 border-violet-500/30", text: "text-violet-300",  label: "Voice" },
-  briefing: { bg: "bg-amber-500/15 border-amber-500/30",  text: "text-amber-300",   label: "Briefing" },
+  chat:       { bg: "bg-cyan-500/15 border-cyan-500/30",      text: "text-cyan-300",    label: "Chat" },
+  transcribe: { bg: "bg-emerald-500/15 border-emerald-500/30", text: "text-emerald-300", label: "Transcribe" },
+  voice:      { bg: "bg-violet-500/15 border-violet-500/30",   text: "text-violet-300",  label: "Voice" },
+  briefing:   { bg: "bg-amber-500/15 border-amber-500/30",     text: "text-amber-300",   label: "Briefing" },
 };
 
 function typeBadge(type: string) {
@@ -248,9 +249,10 @@ export default function DashboardClient({
         {/* ── Credit cost reference ──────────────────────── */}
         <section className="glass-panel rounded-2xl p-6">
           <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">Credit Usage Per Request</h2>
-          <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: "Chat", cost: 1, color: "text-cyan-300 border-cyan-500/30" },
+              { label: "Transcribe", cost: 1, color: "text-emerald-300 border-emerald-500/30" },
               { label: "Voice", cost: 2, color: "text-violet-300 border-violet-500/30" },
               { label: "Briefing", cost: 3, color: "text-amber-300 border-amber-500/30" },
             ].map((item) => (
