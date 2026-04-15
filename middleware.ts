@@ -30,4 +30,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ["/dashboard/:path*", "/auth/:path*"],
+  // Note: /api/app/* routes use Bearer token auth, not cookies — excluded from middleware
 };

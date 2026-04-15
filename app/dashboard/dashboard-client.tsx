@@ -5,10 +5,19 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { buildLemonCheckoutUrl } from "@/lib/lemon/build-checkout-url";
 
+type UsageRow = {
+  id: number;
+  request_type: string;
+  credits_used: number;
+  model: string | null;
+  created_at: string;
+};
+
 type Props = {
   email: string;
   userId: string;
-  hasAccess: boolean;
+  credits: number;
+  recentUsage: UsageRow[];
   checkoutUrl: string;
   downloadUrl: string;
   downloadFileName: string;
@@ -56,30 +65,6 @@ function IconCog({ className }: { className?: string }) {
   );
 }
 
-function IconVoice({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M2 10v3" /><path d="M6 6v11" /><path d="M10 3v18" /><path d="M14 8v7" /><path d="M18 5v13" /><path d="M22 10v3" />
-    </svg>
-  );
-}
-
-function IconGlobe({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
-    </svg>
-  );
-}
-
-function IconZap({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-    </svg>
-  );
-}
-
 function IconShield({ className }: { className?: string }) {
   return (
     <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -90,58 +75,92 @@ function IconShield({ className }: { className?: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+const TYPE_STYLE: Record<string, { bg: string; text: string; label: string }> = {
+  chat:     { bg: "bg-cyan-500/15 border-cyan-500/30",   text: "text-cyan-300",    label: "Chat" },
+  voice:    { bg: "bg-violet-500/15 border-violet-500/30", text: "text-violet-300",  label: "Voice" },
+  briefing: { bg: "bg-amber-500/15 border-amber-500/30",  text: "text-amber-300",   label: "Briefing" },
+};
+
+function typeBadge(type: string) {
+  const s = TYPE_STYLE[type] ?? { bg: "bg-slate-500/15 border-slate-500/30", text: "text-slate-300", label: type };
+  return s;
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 export default function DashboardClient({
   email,
   userId,
-  hasAccess: initialHasAccess,
+  credits: initialCredits,
+  recentUsage: initialUsage,
   checkoutUrl,
   downloadUrl,
   downloadFileName,
 }: Props) {
   const router = useRouter();
-  const [hasAccess, setHasAccess] = useState(initialHasAccess);
+  const [credits, setCredits] = useState(initialCredits);
+  const [usage, setUsage] = useState<UsageRow[]>(initialUsage);
 
-  const pollAccess = useCallback(async () => {
+  const pollCredits = useCallback(async () => {
     try {
       const supabase = createClient();
-      const { data } = await supabase
-        .from("user_access")
-        .select("has_access")
-        .eq("user_id", userId)
-        .maybeSingle<{ has_access: boolean }>();
-      if (data?.has_access && !hasAccess) {
-        setHasAccess(true);
-      }
+      const [cRes, uRes] = await Promise.all([
+        supabase
+          .from("user_credits")
+          .select("balance")
+          .eq("user_id", userId)
+          .maybeSingle<{ balance: number }>(),
+        supabase
+          .from("usage_logs")
+          .select("id, request_type, credits_used, model, created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(10)
+          .returns<UsageRow[]>(),
+      ]);
+      if (cRes.data) setCredits(cRes.data.balance);
+      if (uRes.data) setUsage(uRes.data);
     } catch {
-      // network hiccup — skip this tick
+      // skip
     }
-  }, [userId, hasAccess]);
+  }, [userId]);
 
   useEffect(() => {
-    if (hasAccess) return;
-    const id = setInterval(pollAccess, 5_000);
+    const id = setInterval(pollCredits, 8_000);
     return () => clearInterval(id);
-  }, [hasAccess, pollAccess]);
+  }, [pollCredits]);
 
   useEffect(() => {
-    if (hasAccess) return;
     const supabase = createClient();
     const channel = supabase
-      .channel("user_access_changes")
+      .channel("user_credits_changes")
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
-          table: "user_access",
+          table: "user_credits",
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const row = payload.new as { has_access?: boolean };
-          if (row.has_access) setHasAccess(true);
+          const row = payload.new as { balance?: number };
+          if (typeof row.balance === "number") setCredits(row.balance);
         },
       )
       .subscribe();
@@ -149,7 +168,7 @@ export default function DashboardClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, hasAccess]);
+  }, [userId]);
 
   const onSignOut = async () => {
     const supabase = createClient();
@@ -159,248 +178,346 @@ export default function DashboardClient({
   };
 
   const checkoutHref = useMemo(() => {
-    if (!checkoutUrl || hasAccess) return checkoutUrl;
+    if (!checkoutUrl) return checkoutUrl;
     return buildLemonCheckoutUrl(checkoutUrl, { email, userId });
-  }, [checkoutUrl, email, userId, hasAccess]);
+  }, [checkoutUrl, email, userId]);
+
+  const hasCredits = credits > 0;
 
   return (
     <main className="min-h-screen px-6 py-10">
-      <section className="glass-panel mx-auto w-full max-w-3xl rounded-2xl p-8">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">Dashboard</p>
-            <h1 className="mt-2 text-3xl font-bold text-white">Jarvis for Mac</h1>
-            <p className="mt-2 text-slate-300">{email || "Unknown email"}</p>
+      <div className="mx-auto w-full max-w-3xl space-y-6">
+        {/* ── Header ─────────────────────────────────────── */}
+        <section className="glass-panel rounded-2xl p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">Dashboard</p>
+              <h1 className="mt-2 text-3xl font-bold text-white">Jarvis for Mac</h1>
+              <p className="mt-2 text-slate-300">{email || "Unknown email"}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                hasCredits
+                  ? "border-emerald-500/40 bg-emerald-500/10"
+                  : "border-amber-500/40 bg-amber-500/10"
+              }`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={hasCredits ? "text-emerald-400" : "text-amber-400"} aria-hidden>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+                  <path d="M12 18V6" />
+                </svg>
+                <span className={`text-sm font-semibold tabular-nums ${hasCredits ? "text-emerald-200" : "text-amber-200"}`}>
+                  {credits.toLocaleString()} credits
+                </span>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:border-slate-400"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-          <button
-            onClick={onSignOut}
-            className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:border-slate-400"
-          >
-            Logout
-          </button>
-        </div>
+        </section>
 
-        {/* Main content — conditional on payment status */}
-        <div className="mt-8">
-          {hasAccess ? (
-            <PaidSection
-              downloadUrl={downloadUrl}
-              downloadFileName={downloadFileName}
-            />
-          ) : (
-            <UnpaidSection checkoutHref={checkoutHref} checkoutUrl={checkoutUrl} />
-          )}
-        </div>
-      </section>
+        {/* ── AI Status banner ───────────────────────────── */}
+        {hasCredits ? (
+          <section className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/50 to-slate-950/60 p-5 text-center shadow-[0_0_48px_-12px_rgba(16,185,129,0.18)]">
+            <p className="text-sm font-medium tracking-wide text-emerald-300">AI ACCESS READY</p>
+            <h2 className="mt-2 text-xl font-bold text-white md:text-2xl">
+              Your JARVIS is fully operational.
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
+              You have <strong className="text-emerald-200">{credits.toLocaleString()}</strong> credits available.
+              Open the app and sign in with this account to use all AI features.
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 to-slate-950/60 p-5 text-center shadow-[0_0_48px_-12px_rgba(245,158,11,0.15)]">
+            <p className="text-sm font-medium tracking-wide text-amber-300">NO CREDITS</p>
+            <h2 className="mt-2 text-xl font-bold text-white md:text-2xl">
+              Add credits to activate AI features.
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
+              The app is installed and ready — purchase credits below to power voice,
+              briefings, research, and visual mapping.
+            </p>
+          </section>
+        )}
+
+        {/* ── Credit cost reference ──────────────────────── */}
+        <section className="glass-panel rounded-2xl p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">Credit Usage Per Request</h2>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            {[
+              { label: "Chat", cost: 1, color: "text-cyan-300 border-cyan-500/30" },
+              { label: "Voice", cost: 2, color: "text-violet-300 border-violet-500/30" },
+              { label: "Briefing", cost: 3, color: "text-amber-300 border-amber-500/30" },
+            ].map((item) => (
+              <div key={item.label} className={`flex items-center justify-between rounded-lg border bg-slate-900/50 px-3 py-2.5 ${item.color}`}>
+                <span className="text-sm font-medium">{item.label}</span>
+                <span className="text-xs font-bold tabular-nums opacity-80">{item.cost} cr</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Recent usage history ───────────────────────── */}
+        <UsageHistory usage={usage} />
+
+        {/* ── Download section (always visible) ──────────── */}
+        <section className="glass-panel rounded-2xl p-6">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Download J.A.R.V.I.S.</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Free for everyone. No payment required to download.
+              </p>
+            </div>
+            <a
+              href={downloadUrl}
+              download={downloadFileName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_28px_-6px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 md:text-base"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download for macOS
+            </a>
+          </div>
+        </section>
+
+        {/* ── Credit purchase section ────────────────────── */}
+        <CreditPurchaseSection
+          checkoutHref={checkoutHref}
+          checkoutUrl={checkoutUrl}
+          hasCredits={hasCredits}
+        />
+
+        {/* ── Setup guide ────────────────────────────────── */}
+        <SetupGuide />
+      </div>
     </main>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Paid: welcome + download + setup guide                             */
+/*  Usage history                                                      */
 /* ------------------------------------------------------------------ */
 
-function PaidSection({
-  downloadUrl,
-  downloadFileName,
-}: {
-  downloadUrl: string;
-  downloadFileName: string;
-}) {
-  return (
-    <>
-      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/50 to-slate-950/60 p-6 text-center shadow-[0_0_48px_-12px_rgba(16,185,129,0.18)]">
-        <p className="text-sm font-medium tracking-wide text-emerald-300">PREMIUM ACTIVE</p>
-        <h2 className="mt-3 text-2xl font-bold text-white md:text-3xl">
-          Welcome, Agent. Your J.A.R.V.I.S. is ready.
+function UsageHistory({ usage }: { usage: UsageRow[] }) {
+  if (usage.length === 0) {
+    return (
+      <section className="glass-panel rounded-2xl p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">
+          Recent Activity
         </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-300">
-          Your premium access is confirmed. Download the installer below and follow the
-          setup guide to get started.
+        <p className="mt-3 text-sm text-slate-500">
+          No usage yet. AI requests from the app will appear here.
         </p>
-
-        <a
-          href={downloadUrl}
-          download={downloadFileName}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-6 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_28px_-6px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 md:text-lg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Download J.A.R.V.I.S. for macOS
-        </a>
-      </div>
-
-      {/* Setup guide */}
-      <section
-        className="mt-10 rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-slate-950/80 to-indigo-950/40 p-6 shadow-[0_0_40px_-12px_rgba(34,211,238,0.15)]"
-        aria-labelledby="jarvis-setup-guide-heading"
-      >
-        <h2
-          id="jarvis-setup-guide-heading"
-          className="text-lg font-semibold tracking-tight text-cyan-200 neon-text md:text-xl"
-        >
-          J.A.R.V.I.S. Setup Guide
-        </h2>
-        <p className="mt-2 text-sm text-slate-400">
-          After installation, complete these steps in order for a smooth first run.
-        </p>
-
-        <ol className="mt-6 space-y-4">
-          <li className="relative flex gap-4 rounded-xl border border-indigo-500/30 bg-slate-900/50 p-4 md:gap-5 md:p-5">
-            <div className="flex shrink-0 flex-col items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-500/10 text-xs font-bold text-cyan-300">
-                1
-              </span>
-              <div className="flex flex-col items-center gap-1 text-cyan-400/90">
-                <IconMic className="h-7 w-7 md:h-8 md:w-8" />
-                <IconMonitor className="h-6 w-6 opacity-90" />
-              </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-white">Step 1: System Permissions &amp; Security</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                If you see a security warning on the first launch, go to{" "}
-                <strong className="text-slate-100">System Settings</strong> &gt;{" "}
-                <strong className="text-slate-100">Privacy &amp; Security</strong> and
-                click <strong className="text-cyan-200">&apos;Open Anyway&apos;</strong>{" "}
-                for JARVIS to allow access.
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                When prompted, please grant permissions for both the{" "}
-                <strong className="text-cyan-200">&apos;Microphone&apos;</strong> and{" "}
-                <strong className="text-cyan-200">&apos;Screen &amp; System Audio Recording&apos;</strong>.
-              </p>
-              <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
-                <span className="font-medium text-amber-200/95">Tip:</span> If features are
-                not responding after granting permissions, fully quit the app (
-                <kbd className="rounded border border-slate-600 bg-slate-800 px-1.5 py-0.5 font-mono text-[0.7rem] text-slate-200">Cmd+Q</kbd>
-                ) and restart it.
-              </p>
-            </div>
-          </li>
-
-          <li className="relative flex gap-4 rounded-xl border border-indigo-500/30 bg-slate-900/50 p-4 md:gap-5 md:p-5">
-            <div className="flex shrink-0 flex-col items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-400/50 bg-violet-500/10 text-xs font-bold text-violet-200">
-                2
-              </span>
-              <div className="flex flex-col items-center gap-1 text-violet-300/90">
-                <IconCog className="h-6 w-6 opacity-90" />
-                <IconKey className="h-7 w-7 md:h-8 md:w-8" />
-              </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-white">Step 2: Activate AI Brain</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                Click the <strong className="text-violet-200">Gear Icon (OpenAI Settings)</strong>{" "}
-                located in the top-right corner of the dashboard.
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                Enter your personal OpenAI API Key to fully activate all AI assistant
-                functionalities.
-              </p>
-            </div>
-          </li>
-        </ol>
       </section>
-    </>
+    );
+  }
+
+  return (
+    <section className="glass-panel rounded-2xl p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">
+        Recent Activity
+      </h2>
+      <ul className="mt-3 divide-y divide-slate-700/50">
+        {usage.map((row) => {
+          const badge = typeBadge(row.request_type);
+          return (
+            <li key={row.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+              <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${badge.bg} ${badge.text}`}>
+                {badge.label}
+              </span>
+              <span className="text-xs tabular-nums text-slate-400">
+                &minus;{row.credits_used} cr
+              </span>
+              {row.model && (
+                <span className="hidden text-xs text-slate-600 sm:inline">{row.model}</span>
+              )}
+              <span className="ml-auto text-xs text-slate-500">
+                {relativeTime(row.created_at)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Unpaid: Premium upsell                                             */
+/*  Credit purchase — with pricing tiers                               */
 /* ------------------------------------------------------------------ */
 
-const BENEFITS = [
-  {
-    icon: IconVoice,
-    title: "Unlimited Live Voice Mode",
-    desc: "Speak naturally with J.A.R.V.I.S. — no session caps, no interruptions.",
-  },
-  {
-    icon: IconGlobe,
-    title: "Real-time News & Web Analysis",
-    desc: "Instant insights from the web, summarized and delivered on demand.",
-  },
-  {
-    icon: IconZap,
-    title: "Full Workflow Automation",
-    desc: "Automate every repetitive task. Let J.A.R.V.I.S. handle the heavy lifting.",
-  },
+const PLANS = [
+  { tier: "Lite",     credits: 100,  price: "$9.99",  perCredit: "$0.10", highlight: false },
+  { tier: "Standard", credits: 300,  price: "$24.99", perCredit: "$0.08", highlight: true },
+  { tier: "Pro",      credits: 1000, price: "$59.99", perCredit: "$0.06", highlight: false },
 ] as const;
 
-function UnpaidSection({
+function CreditPurchaseSection({
   checkoutHref,
   checkoutUrl,
+  hasCredits,
 }: {
   checkoutHref: string;
   checkoutUrl: string;
+  hasCredits: boolean;
 }) {
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 via-slate-950/70 to-indigo-950/40 p-6 shadow-[0_0_48px_-12px_rgba(139,92,246,0.2)] md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300/90">
-          Premium
-        </p>
-        <h2 className="mt-3 text-balance text-2xl font-bold leading-tight text-white md:text-3xl">
-          Upgrade to J.A.R.V.I.S. Premium
-        </h2>
-        <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-slate-300 md:text-base">
-          Unlock your personal command center. Get full access to every feature
-          J.A.R.V.I.S. has to offer — built for builders who move fast.
-        </p>
+    <section className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 via-slate-950/70 to-indigo-950/40 p-6 shadow-[0_0_48px_-12px_rgba(139,92,246,0.2)] md:p-8">
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300/90">
+        Credits
+      </p>
+      <h2 className="mt-3 text-balance text-2xl font-bold leading-tight text-white md:text-3xl">
+        {hasCredits ? "Need More Credits?" : "Power Up Your AI Features"}
+      </h2>
+      <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-slate-300 md:text-base">
+        Credits fuel every AI interaction — voice conversations, news briefings,
+        autonomous research, and visual mapping.
+      </p>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3 md:gap-4">
-          {BENEFITS.map(({ icon: Icon, title, desc }) => (
-            <div
-              key={title}
-              className="flex gap-3 rounded-xl border border-indigo-500/25 bg-slate-900/50 p-4"
-            >
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-500/40 bg-violet-500/10 text-violet-300">
-                <Icon />
+      {/* Pricing cards */}
+      <div className="mt-6 grid gap-3 md:grid-cols-3 md:gap-4">
+        {PLANS.map((plan) => (
+          <div
+            key={plan.tier}
+            className={`relative flex flex-col rounded-xl border p-4 ${
+              plan.highlight
+                ? "border-violet-400/50 bg-violet-900/30 shadow-[0_0_24px_-8px_rgba(139,92,246,0.3)]"
+                : "border-indigo-500/25 bg-slate-900/50"
+            }`}
+          >
+            {plan.highlight && (
+              <span className="absolute -top-2.5 left-3 rounded-full bg-violet-500 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-white">
+                Best value
               </span>
-              <div>
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex flex-col items-center gap-3 md:items-start">
-          {checkoutUrl ? (
-            <a
-              href={checkoutHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 text-base font-semibold text-white shadow-[0_0_32px_-8px_rgba(139,92,246,0.5)] transition hover:bg-violet-400 md:w-auto md:text-lg"
-            >
-              Upgrade Now
-            </a>
-          ) : (
-            <p className="text-sm text-rose-300">
-              Missing `NEXT_PUBLIC_LEMON_CHECKOUT_URL` environment variable.
+            )}
+            <p className="text-sm font-semibold text-white">{plan.tier}</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-white">
+              {plan.credits.toLocaleString()}
+              <span className="ml-1 text-sm font-normal text-slate-400">credits</span>
             </p>
-          )}
-
-          <div className="flex items-center gap-2 text-xs text-slate-400 md:text-sm">
-            <IconShield className="h-4 w-4 shrink-0 text-emerald-400/80" />
-            <span>
-              Download link will be unlocked immediately after payment.
-            </span>
+            <p className="mt-1 text-lg font-semibold tabular-nums text-violet-300">{plan.price}</p>
+            <p className="mt-auto pt-2 text-xs text-slate-500">{plan.perCredit} / credit</p>
           </div>
+        ))}
+      </div>
+
+      <div className="mt-8 flex flex-col items-center gap-3 md:items-start">
+        {checkoutUrl ? (
+          <a
+            href={checkoutHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 text-base font-semibold text-white shadow-[0_0_32px_-8px_rgba(139,92,246,0.5)] transition hover:bg-violet-400 md:w-auto md:text-lg"
+          >
+            {hasCredits ? "Buy More Credits" : "Get Credits"}
+          </a>
+        ) : (
+          <p className="text-sm text-rose-300">
+            Missing `NEXT_PUBLIC_LEMON_CHECKOUT_URL` environment variable.
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 text-xs text-slate-400 md:text-sm">
+          <IconShield className="h-4 w-4 shrink-0 text-emerald-400/80" />
+          <span>Credits are added to your account instantly after payment.</span>
         </div>
       </div>
 
-      <p className="text-center text-xs text-slate-500 md:text-sm">
-        Secure checkout via LemonSqueezy. One-time payment, lifetime access.
+      <p className="mt-4 text-center text-xs text-slate-500 md:text-left md:text-sm">
+        Secure checkout via LemonSqueezy. No subscriptions — buy credits when you need them.
       </p>
-    </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Setup guide                                                        */
+/* ------------------------------------------------------------------ */
+
+function SetupGuide() {
+  return (
+    <section
+      className="rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-slate-950/80 to-indigo-950/40 p-6 shadow-[0_0_40px_-12px_rgba(34,211,238,0.15)]"
+      aria-labelledby="jarvis-setup-guide-heading"
+    >
+      <h2
+        id="jarvis-setup-guide-heading"
+        className="text-lg font-semibold tracking-tight text-cyan-200 neon-text md:text-xl"
+      >
+        J.A.R.V.I.S. Setup Guide
+      </h2>
+      <p className="mt-2 text-sm text-slate-400">
+        After downloading, follow these steps to get started.
+      </p>
+
+      <ol className="mt-6 space-y-4">
+        <li className="relative flex gap-4 rounded-xl border border-indigo-500/30 bg-slate-900/50 p-4 md:gap-5 md:p-5">
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-500/10 text-xs font-bold text-cyan-300">
+              1
+            </span>
+            <div className="flex flex-col items-center gap-1 text-cyan-400/90">
+              <IconMic className="h-7 w-7 md:h-8 md:w-8" />
+              <IconMonitor className="h-6 w-6 opacity-90" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-white">Step 1: System Permissions &amp; Security</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              If you see a security warning on the first launch, go to{" "}
+              <strong className="text-slate-100">System Settings</strong> &gt;{" "}
+              <strong className="text-slate-100">Privacy &amp; Security</strong> and
+              click <strong className="text-cyan-200">&apos;Open Anyway&apos;</strong>{" "}
+              for JARVIS to allow access.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              When prompted, please grant permissions for both the{" "}
+              <strong className="text-cyan-200">&apos;Microphone&apos;</strong> and{" "}
+              <strong className="text-cyan-200">&apos;Screen &amp; System Audio Recording&apos;</strong>.
+            </p>
+            <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
+              <span className="font-medium text-amber-200/95">Tip:</span> If features are
+              not responding after granting permissions, fully quit the app (
+              <kbd className="rounded border border-slate-600 bg-slate-800 px-1.5 py-0.5 font-mono text-[0.7rem] text-slate-200">Cmd+Q</kbd>
+              ) and restart it.
+            </p>
+          </div>
+        </li>
+
+        <li className="relative flex gap-4 rounded-xl border border-indigo-500/30 bg-slate-900/50 p-4 md:gap-5 md:p-5">
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-400/50 bg-violet-500/10 text-xs font-bold text-violet-200">
+              2
+            </span>
+            <div className="flex flex-col items-center gap-1 text-violet-300/90">
+              <IconCog className="h-6 w-6 opacity-90" />
+              <IconKey className="h-7 w-7 md:h-8 md:w-8" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-white">Step 2: Sign In to Your Account</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Open the app and sign in with the same account you created on this website.
+              This connects the app to your credit balance and AI backend.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              No credits yet? Purchase them above — they&apos;ll be ready instantly
+              in the app after you sign in.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
   );
 }

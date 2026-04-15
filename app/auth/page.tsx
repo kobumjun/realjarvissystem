@@ -22,11 +22,11 @@ export default async function AuthPage() {
             J.A.R.V.I.S. for Mac
           </p>
           <h2 className="text-balance text-3xl font-bold leading-tight text-white md:text-4xl">
-            Your AI Assistant that actually connects the dots.
+            Sign in to power up your JARVIS.
           </h2>
           <p className="max-w-xl text-pretty text-base leading-relaxed text-slate-300 md:text-lg">
-            Experience J.A.R.V.I.S. on macOS. Real-time voice, smart search, and visual
-            knowledge mapping all in one place.
+            The app is free to download. Create an account to connect your AI features,
+            track your credit balance, and unlock voice, briefings, and research.
           </p>
           <div className="relative mx-auto w-full max-w-xl lg:mx-0">
             <div
@@ -50,16 +50,16 @@ export default async function AuthPage() {
 
         <div className="flex w-full flex-col items-center lg:items-stretch">
           <h1 className="mb-3 text-center text-3xl font-bold text-cyan-300 neon-text lg:text-left">
-            Access Jarvis for Mac
+            Your JARVIS Account
           </h1>
           <p className="mb-8 text-center text-slate-300 lg:text-left">
-            Log in or create your account. You will be redirected to your payment and
-            download dashboard after authentication.
+            Sign in or create a free account. Manage your credits and AI usage
+            from your dashboard.
           </p>
           <div className="flex w-full flex-col items-center gap-3 lg:items-start">
             <AuthForm />
             <p className="max-w-md text-center text-xs leading-relaxed text-slate-500 lg:text-left">
-              No Credit Card Required. Just Bring Your OpenAI Key.
+              Free to sign up. No credit card required to create your account.
             </p>
           </div>
         </div>

@@ -240,10 +240,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // ── Credit charging ────────────────────────────────────
+  const { resolveCredits } = await import("@/lib/credits/config");
+  const { adjustCredits } = await import("@/lib/credits/adjust");
+
+  const firstItem = attrs["first_order_item"] as Record<string, unknown> | undefined;
+  const variantId = stringifyId(attrs["variant_id"] ?? firstItem?.["variant_id"]);
+  const productName = typeof attrs["product_name"] === "string" ? attrs["product_name"] : undefined;
+  const orderId = stringifyId(attrs["id"] ?? attrs["order_number"]);
+
+  const { tier, credits } = resolveCredits(variantId, productName);
+
+  const creditResult = await adjustCredits(
+    admin,
+    resolvedUserId,
+    credits,
+    `purchase:${tier}`,
+    orderId ? `lemon:${orderId}` : undefined,
+  );
+
   return NextResponse.json({
     ok: true,
     user_id: resolvedUserId,
     matched_by: candidateUserId && resolvedUserId === candidateUserId ? "custom_data_or_passthrough" : "email",
     event_name: eventName,
+    credits_charged: credits,
+    credit_tier: tier,
+    new_balance: creditResult.ok ? creditResult.newBalance : null,
   });
 }

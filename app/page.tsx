@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ScrollReveal } from "./scroll-reveal";
+import { env } from "@/lib/env";
 
 const FEATURES = [
   {
@@ -40,12 +41,24 @@ export default function Home() {
         <p className="text-lg font-semibold tracking-[0.25em] text-cyan-300 neon-text">
           JARVIS
         </p>
-        <Link
-          href="/auth"
-          className="rounded-lg border border-cyan-400/40 px-4 py-2 text-sm text-cyan-100 hover:border-cyan-300"
-        >
-          Login / Sign Up
-        </Link>
+        <div className="flex items-center gap-3">
+          <a
+            href={env.jarvisDownloadUrl}
+            download={env.jarvisDownloadFileName}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:inline-flex"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            Download for Mac
+          </a>
+          <Link
+            href="/auth"
+            className="rounded-lg border border-cyan-400/40 px-4 py-2 text-sm text-cyan-100 hover:border-cyan-300"
+          >
+            Login / Sign Up
+          </Link>
+        </div>
       </nav>
 
       <main className="mx-auto mt-10 w-full max-w-6xl md:mt-14">
@@ -55,8 +68,31 @@ export default function Home() {
             Your Personal J.A.R.V.I.S. for macOS
           </h1>
           <p className="mx-auto mt-5 max-w-3xl text-pretty text-base leading-relaxed text-slate-300 md:text-lg lg:text-xl">
-            Real-time voice, Smart Search, and Visual Knowledge Mapping.
-            Experience the next level of AI assistance.
+            Download the app for free. Sign in to unlock AI-powered voice,
+            briefings, research, and visual mapping — all fueled by credits.
+          </p>
+
+          {/* Dual CTA */}
+          <div className="mx-auto mt-8 flex max-w-lg flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <a
+              href={env.jarvisDownloadUrl}
+              download={env.jarvisDownloadFileName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-400 px-7 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_32px_-8px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 sm:w-auto md:text-lg"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              Download Free for Mac
+            </a>
+            <Link
+              href="/auth"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-violet-500/60 px-7 py-3.5 text-base font-semibold text-violet-200 transition hover:border-violet-400 hover:text-white sm:w-auto md:text-lg"
+            >
+              Sign In &amp; Get Credits
+            </Link>
+          </div>
+          <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500 md:text-sm">
+            Free to download. AI features require a free account and credits.
           </p>
 
           {/* MacBook frame */}
@@ -86,6 +122,30 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ──────────── How it works (3-step) ──────────── */}
+        <ScrollReveal>
+          <section className="glass-panel mx-auto mt-20 rounded-2xl p-6 md:mt-28 md:p-8">
+            <h2 className="text-center text-xl font-semibold text-white md:text-2xl">
+              How It Works
+            </h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
+              {[
+                ["1. Download", "Grab the macOS app for free — no payment or account required to install."],
+                ["2. Sign In", "Create a free account to connect the app to your AI backend."],
+                ["3. Add Credits", "Purchase credits to power voice, briefings, research, and more."],
+              ].map(([title, desc]) => (
+                <article
+                  key={title}
+                  className="rounded-xl border border-indigo-400/30 bg-indigo-900/20 p-4 md:p-5"
+                >
+                  <h3 className="font-semibold text-cyan-200">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">{desc}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
         {/* ───────────────── Feature sections ────────────── */}
         <div className="mt-20 space-y-28 md:mt-28 md:space-y-36">
           {FEATURES.map((f, i) => {
@@ -97,7 +157,6 @@ export default function Home() {
                     reversed ? "md:flex-row-reverse" : "md:flex-row"
                   }`}
                 >
-                  {/* Text */}
                   <div className="flex-1 space-y-4 text-center md:text-left">
                     <h2 className="text-balance text-2xl font-bold text-white md:text-3xl lg:text-4xl">
                       {f.heading}
@@ -106,8 +165,6 @@ export default function Home() {
                       {f.description}
                     </p>
                   </div>
-
-                  {/* Image */}
                   <div className="w-full flex-1">
                     <div className="feature-img-glow overflow-hidden rounded-2xl border border-cyan-500/20 bg-slate-950/70">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,7 +185,7 @@ export default function Home() {
           })}
         </div>
 
-        {/* ───────── Core capabilities (unchanged) ──────── */}
+        {/* ───────── Core capabilities ──────── */}
         <ScrollReveal>
           <section className="glass-panel mx-auto mt-20 rounded-2xl p-6 md:mt-28 md:p-8">
             <h2 className="text-center text-xl font-semibold text-white md:text-2xl">
@@ -138,7 +195,7 @@ export default function Home() {
               {[
                 ["Real-time Voice", "Natural voice conversation with low-latency response loop."],
                 ["Screen Perception", "Understand active windows and on-screen context while you build."],
-                ["BYOK Security", "Bring your own key policy. Your model key stays under your control."],
+                ["Credit-based Usage", "Pay only for what you use. No subscriptions, no hidden fees."],
               ].map(([title, desc]) => (
                 <article
                   key={title}
@@ -156,22 +213,33 @@ export default function Home() {
         <ScrollReveal>
           <section className="mx-auto mt-20 max-w-3xl pb-16 text-center md:mt-28">
             <h2 className="text-balance text-3xl font-bold text-white md:text-4xl">
-              Unlock the Full Power of JARVIS Today.
+              Download the App. Unlock Intelligence with Credits.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-300 md:text-base">
-              Premium members get instant access to the macOS application download.
+              JARVIS is free to install. Sign in and add credits to activate
+              voice, briefings, autonomous research, and visual mapping.
             </p>
-            <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <a
+                href={env.jarvisDownloadUrl}
+                download={env.jarvisDownloadFileName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-cyan-400 px-8 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_32px_-8px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 sm:w-auto md:text-lg"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                Download Free
+              </a>
               <Link
                 href="/auth"
-                className="inline-flex w-full max-w-md items-center justify-center rounded-lg bg-cyan-400 px-8 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_32px_-8px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 md:text-lg"
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-lg border border-violet-500/60 px-8 py-3.5 text-base font-semibold text-violet-200 transition hover:border-violet-400 hover:text-white sm:w-auto md:text-lg"
               >
-                Get Started / Sign Up
+                Get Credits
               </Link>
-              <p className="max-w-md text-xs leading-relaxed text-slate-500 md:text-sm">
-                No Credit Card Required. Free to use with your own OpenAI Key.
-              </p>
             </div>
+            <p className="mt-3 max-w-md mx-auto text-xs leading-relaxed text-slate-500 md:text-sm">
+              No credit card needed to download. Credits start at just a few dollars.
+            </p>
           </section>
         </ScrollReveal>
       </main>

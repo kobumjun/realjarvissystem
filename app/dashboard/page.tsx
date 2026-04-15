@@ -5,8 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type AccessRow = {
-  has_access: boolean;
+type CreditsRow = { balance: number };
+type UsageRow = {
+  id: number;
+  request_type: string;
+  credits_used: number;
+  model: string | null;
+  created_at: string;
 };
 
 export default async function DashboardPage() {
@@ -19,17 +24,27 @@ export default async function DashboardPage() {
     redirect("/auth");
   }
 
-  const { data } = await supabase
-    .from("user_access")
-    .select("has_access")
-    .eq("user_id", user.id)
-    .maybeSingle<AccessRow>();
+  const [creditsRes, usageRes] = await Promise.all([
+    supabase
+      .from("user_credits")
+      .select("balance")
+      .eq("user_id", user.id)
+      .maybeSingle<CreditsRow>(),
+    supabase
+      .from("usage_logs")
+      .select("id, request_type, credits_used, model, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .returns<UsageRow[]>(),
+  ]);
 
   return (
     <DashboardClient
       email={user.email ?? ""}
       userId={user.id}
-      hasAccess={Boolean(data?.has_access)}
+      credits={creditsRes.data?.balance ?? 0}
+      recentUsage={usageRes.data ?? []}
       checkoutUrl={env.lemonCheckoutUrl}
       downloadUrl={env.jarvisDownloadUrl}
       downloadFileName={env.jarvisDownloadFileName}
