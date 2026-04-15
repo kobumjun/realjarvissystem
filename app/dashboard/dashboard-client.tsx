@@ -246,24 +246,6 @@ export default function DashboardClient({
           </section>
         )}
 
-        {/* ── Credit cost reference ──────────────────────── */}
-        <section className="glass-panel rounded-2xl p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">Credit Usage Per Request</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { label: "Chat", cost: 1, color: "text-cyan-300 border-cyan-500/30" },
-              { label: "Transcribe", cost: 1, color: "text-emerald-300 border-emerald-500/30" },
-              { label: "Voice", cost: 2, color: "text-violet-300 border-violet-500/30" },
-              { label: "Briefing", cost: 3, color: "text-amber-300 border-amber-500/30" },
-            ].map((item) => (
-              <div key={item.label} className={`flex items-center justify-between rounded-lg border bg-slate-900/50 px-3 py-2.5 ${item.color}`}>
-                <span className="text-sm font-medium">{item.label}</span>
-                <span className="text-xs font-bold tabular-nums opacity-80">{item.cost} cr</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* ── Recent usage history ───────────────────────── */}
         <UsageHistory usage={usage} />
 
@@ -298,6 +280,8 @@ export default function DashboardClient({
           checkoutHref={checkoutHref}
           checkoutUrl={checkoutUrl}
           hasCredits={hasCredits}
+          email={email}
+          userId={userId}
         />
 
         {/* ── Setup guide ────────────────────────────────── */}
@@ -360,9 +344,9 @@ function UsageHistory({ usage }: { usage: UsageRow[] }) {
 /* ------------------------------------------------------------------ */
 
 const PLANS = [
-  { tier: "Lite",     credits: 100,  price: "$9.99",  perCredit: "$0.10", highlight: false },
-  { tier: "Standard", credits: 300,  price: "$24.99", perCredit: "$0.08", highlight: true },
-  { tier: "Pro",      credits: 1000, price: "$59.99", perCredit: "$0.06", highlight: false },
+  { tier: "Lite",     credits: 100,  price: "$9.99",  perCredit: "$0.10", bestValue: false },
+  { tier: "Standard", credits: 300,  price: "$24.99", perCredit: "$0.08", bestValue: true },
+  { tier: "Pro",      credits: 1000, price: "$59.99", perCredit: "$0.06", bestValue: false },
 ] as const;
 
 function CreditPurchaseSection({
@@ -373,7 +357,12 @@ function CreditPurchaseSection({
   checkoutHref: string;
   checkoutUrl: string;
   hasCredits: boolean;
+  email: string;
+  userId: string;
 }) {
+  const [selected, setSelected] = useState(0);
+  const plan = PLANS[selected];
+
   return (
     <section className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 via-slate-950/70 to-indigo-950/40 p-6 shadow-[0_0_48px_-12px_rgba(139,92,246,0.2)] md:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300/90">
@@ -387,31 +376,41 @@ function CreditPurchaseSection({
         autonomous research, and visual mapping.
       </p>
 
-      {/* Pricing cards */}
+      {/* Selectable pricing cards */}
       <div className="mt-6 grid gap-3 md:grid-cols-3 md:gap-4">
-        {PLANS.map((plan) => (
-          <div
-            key={plan.tier}
-            className={`relative flex flex-col rounded-xl border p-4 ${
-              plan.highlight
-                ? "border-violet-400/50 bg-violet-900/30 shadow-[0_0_24px_-8px_rgba(139,92,246,0.3)]"
-                : "border-indigo-500/25 bg-slate-900/50"
-            }`}
-          >
-            {plan.highlight && (
-              <span className="absolute -top-2.5 left-3 rounded-full bg-violet-500 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-white">
-                Best value
-              </span>
-            )}
-            <p className="text-sm font-semibold text-white">{plan.tier}</p>
-            <p className="mt-2 text-2xl font-bold tabular-nums text-white">
-              {plan.credits.toLocaleString()}
-              <span className="ml-1 text-sm font-normal text-slate-400">credits</span>
-            </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums text-violet-300">{plan.price}</p>
-            <p className="mt-auto pt-2 text-xs text-slate-500">{plan.perCredit} / credit</p>
-          </div>
-        ))}
+        {PLANS.map((p, i) => {
+          const isSelected = i === selected;
+          return (
+            <button
+              key={p.tier}
+              type="button"
+              onClick={() => setSelected(i)}
+              className={`relative flex cursor-pointer flex-col rounded-xl border-2 p-4 text-left transition-all duration-200 ${
+                isSelected
+                  ? "border-violet-400 bg-violet-900/40 shadow-[0_0_32px_-6px_rgba(139,92,246,0.45)] ring-1 ring-violet-400/30"
+                  : "border-slate-700/50 bg-slate-900/40 hover:border-slate-600/70"
+              }`}
+            >
+              {p.bestValue && (
+                <span className="absolute -top-2.5 left-3 rounded-full bg-violet-500 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-white">
+                  Best value
+                </span>
+              )}
+              {isSelected && (
+                <span className="absolute -top-2 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 text-white">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                </span>
+              )}
+              <p className={`text-sm font-semibold ${isSelected ? "text-violet-200" : "text-slate-300"}`}>{p.tier}</p>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-white">
+                {p.credits.toLocaleString()}
+                <span className="ml-1 text-sm font-normal text-slate-400">credits</span>
+              </p>
+              <p className={`mt-1 text-lg font-semibold tabular-nums ${isSelected ? "text-violet-300" : "text-slate-400"}`}>{p.price}</p>
+              <p className="mt-auto pt-2 text-xs text-slate-500">{p.perCredit} / credit</p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-8 flex flex-col items-center gap-3 md:items-start">
@@ -422,7 +421,7 @@ function CreditPurchaseSection({
             rel="noopener noreferrer"
             className="inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 text-base font-semibold text-white shadow-[0_0_32px_-8px_rgba(139,92,246,0.5)] transition hover:bg-violet-400 md:w-auto md:text-lg"
           >
-            {hasCredits ? "Buy More Credits" : "Get Credits"}
+            {hasCredits ? "Buy More Credits" : "Get Credits"} — {plan.tier} ({plan.price})
           </a>
         ) : (
           <p className="text-sm text-rose-300">
