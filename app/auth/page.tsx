@@ -19,10 +19,10 @@ export default async function AuthPage() {
       <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-center lg:gap-12">
         <section className="flex flex-col justify-center space-y-6">
           <p className="text-xs font-medium uppercase tracking-[0.28em] text-cyan-400/90">
-            J.A.R.V.I.S. for Mac
+            R.A.G.E for Mac
           </p>
           <h2 className="text-balance text-3xl font-bold leading-tight text-white md:text-4xl">
-            Sign in to power up your JARVIS.
+            Sign in to power up your R.A.G.E dashboard.
           </h2>
           <p className="max-w-xl text-pretty text-base leading-relaxed text-slate-300 md:text-lg">
             The app is free to download. Create an account to connect your AI features,
@@ -37,7 +37,7 @@ export default async function AuthPage() {
               {/* eslint-disable-next-line @next/next/no-img-element -- explicit <img> for easy screenshot swap in /public */}
               <img
                 src="/images/jarvis-preview.png"
-                alt="J.A.R.V.I.S. for macOS Dashboard Preview"
+                alt="R.A.G.E for macOS dashboard preview"
                 width={960}
                 height={540}
                 className="h-auto w-full object-cover"
@@ -50,7 +50,7 @@ export default async function AuthPage() {
 
         <div className="flex w-full flex-col items-center lg:items-stretch">
           <h1 className="mb-3 text-center text-3xl font-bold text-cyan-300 neon-text lg:text-left">
-            Your JARVIS Account
+            Your R.A.G.E Account
           </h1>
           <p className="mb-8 text-center text-slate-300 lg:text-left">
             Sign in or create a free account. Manage your credits and AI usage

@@ -1,7 +1,8 @@
 {
-  "name": "serving",
+  "name": "rage-landing",
   "version": "0.1.0",
   "private": true,
+  "description": "R.A.G.E landing page",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

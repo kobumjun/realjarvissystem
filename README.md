@@ -1,6 +1,6 @@
-# Jarvis for Mac - Landing / Auth / Payment / Download
+# R.A.G.E Landing Page
 
-Next.js (App Router) project for selling and delivering `Jarvis for Mac`.
+Marketing site for R.A.G.E (Realtime Analytical Grid Engine) trader dashboard.
 
 ## Tech Stack
 
@@ -27,7 +27,7 @@ cp .env.example .env.local
 
 - Run `supabase/schema.sql`
 
-4. The Mac installer link defaults to **Google Drive** (`lib/env.ts`). To use another URL, set `NEXT_PUBLIC_JARVIS_DOWNLOAD_URL`. Optional: `NEXT_PUBLIC_JARVIS_DOWNLOAD_FILENAME` for the `<a download>` attribute.
+4. The Mac installer link defaults to **Google Drive** (`lib/env.ts`). To use another URL, set `NEXT_PUBLIC_RAGE_DOWNLOAD_URL`. Optional: `NEXT_PUBLIC_RAGE_DOWNLOAD_FILENAME` for the `<a download>` attribute.
 
 5. Run dev server:
 

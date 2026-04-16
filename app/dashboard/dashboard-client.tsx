@@ -25,7 +25,6 @@ type Props = {
   }[];
   checkoutUrl: string;
   downloadUrl: string;
-  downloadFileName: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -118,7 +117,6 @@ export default function DashboardClient({
   plans,
   checkoutUrl,
   downloadUrl,
-  downloadFileName,
 }: Props) {
   const router = useRouter();
   const [credits, setCredits] = useState(initialCredits);
@@ -199,7 +197,7 @@ export default function DashboardClient({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">Dashboard</p>
-              <h1 className="mt-2 text-3xl font-bold text-white">Jarvis for Mac</h1>
+              <h1 className="mt-2 text-3xl font-bold text-white">R.A.G.E for Mac</h1>
               <p className="mt-2 text-slate-300">{email || "Unknown email"}</p>
             </div>
             <div className="flex items-center gap-3">
@@ -232,7 +230,7 @@ export default function DashboardClient({
           <section className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/50 to-slate-950/60 p-5 text-center shadow-[0_0_48px_-12px_rgba(16,185,129,0.18)]">
             <p className="text-sm font-medium tracking-wide text-emerald-300">AI ACCESS READY</p>
             <h2 className="mt-2 text-xl font-bold text-white md:text-2xl">
-              Your JARVIS is fully operational.
+              Your R.A.G.E dashboard is fully operational.
             </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
               You have <strong className="text-emerald-200">{credits.toLocaleString()}</strong> credits available.
@@ -259,14 +257,13 @@ export default function DashboardClient({
         <section className="glass-panel rounded-2xl p-6">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-white">Download J.A.R.V.I.S.</h2>
+              <h2 className="text-lg font-semibold text-white">Download R.A.G.E</h2>
               <p className="mt-1 text-sm text-slate-400">
                 Download is unlocked for your signed-in account.
               </p>
             </div>
             <a
               href={downloadUrl}
-              download={downloadFileName}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_28px_-6px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 md:text-base"
@@ -276,7 +273,7 @@ export default function DashboardClient({
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Download for macOS
+              Download R.A.G.E for macOS
             </a>
           </div>
         </section>
@@ -472,13 +469,13 @@ function SetupGuide() {
   return (
     <section
       className="rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-slate-950/80 to-indigo-950/40 p-6 shadow-[0_0_40px_-12px_rgba(34,211,238,0.15)]"
-      aria-labelledby="jarvis-setup-guide-heading"
+      aria-labelledby="rage-setup-guide-heading"
     >
       <h2
-        id="jarvis-setup-guide-heading"
+        id="rage-setup-guide-heading"
         className="text-lg font-semibold tracking-tight text-cyan-200 neon-text md:text-xl"
       >
-        J.A.R.V.I.S. Setup Guide
+        R.A.G.E Setup Guide
       </h2>
       <p className="mt-2 text-sm text-slate-400">
         After downloading, follow these steps to get started.
@@ -502,7 +499,7 @@ function SetupGuide() {
               <strong className="text-slate-100">System Settings</strong> &gt;{" "}
               <strong className="text-slate-100">Privacy &amp; Security</strong> and
               click <strong className="text-cyan-200">&apos;Open Anyway&apos;</strong>{" "}
-              for JARVIS to allow access.
+              for R.A.G.E to allow access.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
               When prompted, please grant permissions for both the{" "}

@@ -57,8 +57,7 @@ export default async function DashboardPage() {
         { tier: "Pro", credits: TIERS.pro.credits, price: TIERS.pro.price },
       ] satisfies Plan[]}
       checkoutUrl={env.lemonCheckoutUrl}
-      downloadUrl={env.jarvisDownloadUrl}
-      downloadFileName={env.jarvisDownloadFileName}
+      downloadUrl={env.rageDownloadUrl}
     />
   );
 }

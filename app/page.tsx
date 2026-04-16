@@ -3,32 +3,32 @@ import { ScrollReveal } from "./scroll-reveal";
 
 const FEATURES = [
   {
-    heading: "Talk to Your Personal JARVIS",
+    heading: "R.A.G.E Monitors Markets 24/7",
     description:
-      "Experience zero-latency voice conversations. A true AI assistant that listens and responds to your voice in real-time.",
+      "Real-time anomaly detection helps you catch unusual market moves as they happen.",
     image: "/images/feature-voice.png",
-    alt: "Voice interaction UI — real-time voice conversation with JARVIS",
+    alt: "R.A.G.E realtime market monitoring dashboard",
   },
   {
-    heading: "Global Intelligence at a Glance",
+    heading: "Voice-Controlled Trading Interface",
     description:
-      "Stay ahead of the curve. JARVIS curates and summarizes the most essential global news tailored to your interests.",
+      "Use natural voice commands to inspect symbols, surface risk, and move faster during live sessions.",
     image: "/images/feature-news.png",
-    alt: "Smart news aggregation — curated global intelligence feed",
+    alt: "R.A.G.E voice command trading view",
   },
   {
-    heading: "Beyond Simple Search",
+    heading: "Realtime Analytical Grid Engine",
     description:
-      "JARVIS doesn't just find links; it navigates the web, analyzes data, and delivers the exact answers you need.",
+      "R.A.G.E fuses market streams into a single analytical grid so you can react with confidence.",
     image: "/images/feature-research.png",
-    alt: "Autonomous web research — deep analysis results",
+    alt: "R.A.G.E analytical signal grid",
   },
   {
-    heading: "Connect the Dots Visually",
+    heading: "Your Trading Edge",
     description:
-      "Transform scattered data into logical structures. JARVIS visually maps complex information into intuitive briefings.",
+      "Transform scattered market data into clear structures and actionable AI-assisted briefings.",
     image: "/images/feature-mapping.png",
-    alt: "Visual information mapping — sphere and node connections",
+    alt: "R.A.G.E visual signal mapping",
   },
 ] as const;
 
@@ -38,7 +38,7 @@ export default function Home() {
       {/* Nav */}
       <nav className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <p className="text-lg font-semibold tracking-[0.25em] text-cyan-300 neon-text">
-          JARVIS
+          R.A.G.E
         </p>
         <div className="flex items-center gap-3">
           <Link
@@ -61,11 +61,13 @@ export default function Home() {
         {/* ───────────────────── Hero ───────────────────── */}
         <section className="text-center">
           <h1 className="text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
-            Your Personal J.A.R.V.I.S. for macOS
+            R.A.G.E
           </h1>
+          <p className="mx-auto mt-3 max-w-3xl text-pretty text-xl font-semibold text-cyan-200 md:text-2xl">
+            Realtime Analytical Grid Engine
+          </p>
           <p className="mx-auto mt-5 max-w-3xl text-pretty text-base leading-relaxed text-slate-300 md:text-lg lg:text-xl">
-            Download the app for free. Sign in to unlock AI-powered voice,
-            briefings, research, and visual mapping — all fueled by credits.
+            AI-Powered Trading Co-Pilot
           </p>
 
           {/* Dual CTA */}
@@ -123,9 +125,10 @@ export default function Home() {
             </h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
               {[
-                ["1. Sign In", "Create a free account to access download and connect your app securely."],
-                ["2. Download", "Download J.A.R.V.I.S. for macOS right after sign-in from your dashboard."],
-                ["3. Add Credits", "Purchase credits to power voice, briefings, research, and more."],
+                ["1. Download R.A.G.E", "Install the desktop app and connect your account in minutes."],
+                ["2. Add Symbols", "Build your watchlist and tune what R.A.G.E monitors for you."],
+                ["3. Enable Monitoring", "Let R.A.G.E watch market signals and alert you in real time."],
+                ["4. Voice Commands", "Try: \"Rage, analyze NVDA\" for fast, spoken market analysis."],
               ].map(([title, desc]) => (
                 <article
                   key={title}
@@ -182,13 +185,13 @@ export default function Home() {
         <ScrollReveal>
           <section className="glass-panel mx-auto mt-20 rounded-2xl p-6 md:mt-28 md:p-8">
             <h2 className="text-center text-xl font-semibold text-white md:text-2xl">
-              Core Capabilities
+              R.A.G.E Core Capabilities
             </h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
               {[
-                ["Real-time Voice", "Natural voice conversation with low-latency response loop."],
-                ["Screen Perception", "Understand active windows and on-screen context while you build."],
-                ["Credit-based Usage", "Pay only for what you use. No subscriptions, no hidden fees."],
+                ["24/7 Market Watch", "R.A.G.E monitors symbols continuously and flags abnormal conditions."],
+                ["Signal Detection", "Catch momentum shifts and volatility spikes before they spread."],
+                ["Voice Trading Control", "Use spoken commands to inspect symbols and run quick analysis."],
               ].map(([title, desc]) => (
                 <article
                   key={title}
@@ -206,11 +209,10 @@ export default function Home() {
         <ScrollReveal>
           <section className="mx-auto mt-20 max-w-3xl pb-16 text-center md:mt-28">
             <h2 className="text-balance text-3xl font-bold text-white md:text-4xl">
-              Download the App. Unlock Intelligence with Credits.
+              Start Monitoring Markets with R.A.G.E
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-300 md:text-base">
-              JARVIS is free to install. Sign in and add credits to activate
-              voice, briefings, autonomous research, and visual mapping.
+              Download R.A.G.E, sign in, and activate AI-powered monitoring with credits.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
@@ -224,7 +226,7 @@ export default function Home() {
                 href="/auth"
                 className="inline-flex w-full max-w-xs items-center justify-center rounded-lg border border-violet-500/60 px-8 py-3.5 text-base font-semibold text-violet-200 transition hover:border-violet-400 hover:text-white sm:w-auto md:text-lg"
               >
-                Get Credits
+                Start Monitoring Markets
               </Link>
             </div>
             <p className="mt-3 max-w-md mx-auto text-xs leading-relaxed text-slate-500 md:text-sm">
