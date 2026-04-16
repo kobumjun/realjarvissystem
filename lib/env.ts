@@ -1,6 +1,6 @@
 /** Google Drive file link; override via env if needed. */
 const DEFAULT_RAGE_DOWNLOAD_URL =
-  "https://drive.google.com/uc?export=download&id=1BRY64Lc2ezHQvoI3Mw4kZ8f0Yx9ckl0z";
+  "https://drive.google.com/uc?export=download&id=18SILMfHb479TS92KnHCaNOqMA-kaKw0p";
 
 export const env = {
   // ── Public (browser-safe) ──────────────────────────────
