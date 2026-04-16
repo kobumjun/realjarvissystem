@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ScrollReveal } from "./scroll-reveal";
-import { env } from "@/lib/env";
 
 const FEATURES = [
   {
@@ -42,16 +41,13 @@ export default function Home() {
           JARVIS
         </p>
         <div className="flex items-center gap-3">
-          <a
-            href={env.jarvisDownloadUrl}
-            download={env.jarvisDownloadFileName}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/auth"
             className="hidden items-center gap-1.5 rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:inline-flex"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-            Download for Mac
-          </a>
+            Sign in to download
+          </Link>
           <Link
             href="/auth"
             className="rounded-lg border border-cyan-400/40 px-4 py-2 text-sm text-cyan-100 hover:border-cyan-300"
@@ -74,16 +70,13 @@ export default function Home() {
 
           {/* Dual CTA */}
           <div className="mx-auto mt-8 flex max-w-lg flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a
-              href={env.jarvisDownloadUrl}
-              download={env.jarvisDownloadFileName}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/auth"
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-400 px-7 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_32px_-8px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 sm:w-auto md:text-lg"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-              Download Free for Mac
-            </a>
+              Sign in to download
+            </Link>
             <Link
               href="/auth"
               className="inline-flex w-full items-center justify-center rounded-lg border border-violet-500/60 px-7 py-3.5 text-base font-semibold text-violet-200 transition hover:border-violet-400 hover:text-white sm:w-auto md:text-lg"
@@ -92,7 +85,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500 md:text-sm">
-            Free to download. AI features require a free account and credits.
+            Create a free account to download the app and access your secure dashboard.
           </p>
 
           {/* MacBook frame */}
@@ -130,8 +123,8 @@ export default function Home() {
             </h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
               {[
-                ["1. Download", "Grab the macOS app for free — no payment or account required to install."],
-                ["2. Sign In", "Create a free account to connect the app to your AI backend."],
+                ["1. Sign In", "Create a free account to access download and connect your app securely."],
+                ["2. Download", "Download J.A.R.V.I.S. for macOS right after sign-in from your dashboard."],
                 ["3. Add Credits", "Purchase credits to power voice, briefings, research, and more."],
               ].map(([title, desc]) => (
                 <article
@@ -220,16 +213,13 @@ export default function Home() {
               voice, briefings, autonomous research, and visual mapping.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <a
-                href={env.jarvisDownloadUrl}
-                download={env.jarvisDownloadFileName}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/auth"
                 className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-cyan-400 px-8 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_32px_-8px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 sm:w-auto md:text-lg"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                Download Free
-              </a>
+                Sign in to download
+              </Link>
               <Link
                 href="/auth"
                 className="inline-flex w-full max-w-xs items-center justify-center rounded-lg border border-violet-500/60 px-8 py-3.5 text-base font-semibold text-violet-200 transition hover:border-violet-400 hover:text-white sm:w-auto md:text-lg"
@@ -238,7 +228,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="mt-3 max-w-md mx-auto text-xs leading-relaxed text-slate-500 md:text-sm">
-              No credit card needed to download. Credits start at just a few dollars.
+              Download is available right after free sign-up. Credits start at just a few dollars.
             </p>
           </section>
         </ScrollReveal>

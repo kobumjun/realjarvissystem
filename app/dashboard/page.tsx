@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import DashboardClient from "@/app/dashboard/dashboard-client";
+import { TIERS } from "@/lib/credits/config";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,6 +13,11 @@ type UsageRow = {
   credits_used: number;
   model: string | null;
   created_at: string;
+};
+type Plan = {
+  tier: "Lite" | "Standard" | "Pro";
+  credits: number;
+  price: string;
 };
 
 export default async function DashboardPage() {
@@ -45,6 +51,11 @@ export default async function DashboardPage() {
       userId={user.id}
       credits={creditsRes.data?.balance ?? 0}
       recentUsage={usageRes.data ?? []}
+      plans={[
+        { tier: "Lite", credits: TIERS.lite.credits, price: TIERS.lite.price },
+        { tier: "Standard", credits: TIERS.standard.credits, price: TIERS.standard.price },
+        { tier: "Pro", credits: TIERS.pro.credits, price: TIERS.pro.price },
+      ] satisfies Plan[]}
       checkoutUrl={env.lemonCheckoutUrl}
       downloadUrl={env.jarvisDownloadUrl}
       downloadFileName={env.jarvisDownloadFileName}

@@ -85,17 +85,17 @@ export type TierConfig = {
 
 export const TIERS: Record<CreditTier, TierConfig> = {
   lite: {
-    credits: Number(process.env.CREDIT_PLAN_LITE) || 100,
+    credits: Number(process.env.CREDIT_PLAN_LITE) || 180,
     price: "$9.99",
     label: "Lite",
   },
   standard: {
-    credits: Number(process.env.CREDIT_PLAN_STANDARD) || 300,
+    credits: Number(process.env.CREDIT_PLAN_STANDARD) || 650,
     price: "$24.99",
     label: "Standard",
   },
   pro: {
-    credits: Number(process.env.CREDIT_PLAN_PRO) || 1000,
+    credits: Number(process.env.CREDIT_PLAN_PRO) || 2400,
     price: "$59.99",
     label: "Pro",
   },

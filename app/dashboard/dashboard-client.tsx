@@ -18,6 +18,11 @@ type Props = {
   userId: string;
   credits: number;
   recentUsage: UsageRow[];
+  plans: {
+    tier: "Lite" | "Standard" | "Pro";
+    credits: number;
+    price: string;
+  }[];
   checkoutUrl: string;
   downloadUrl: string;
   downloadFileName: string;
@@ -110,6 +115,7 @@ export default function DashboardClient({
   userId,
   credits: initialCredits,
   recentUsage: initialUsage,
+  plans,
   checkoutUrl,
   downloadUrl,
   downloadFileName,
@@ -255,7 +261,7 @@ export default function DashboardClient({
             <div>
               <h2 className="text-lg font-semibold text-white">Download J.A.R.V.I.S.</h2>
               <p className="mt-1 text-sm text-slate-400">
-                Free for everyone. No payment required to download.
+                Download is unlocked for your signed-in account.
               </p>
             </div>
             <a
@@ -280,7 +286,7 @@ export default function DashboardClient({
           checkoutHref={checkoutHref}
           checkoutUrl={checkoutUrl}
           hasCredits={hasCredits}
-          email={email}
+          plans={plans}
           userId={userId}
         />
 
@@ -343,25 +349,36 @@ function UsageHistory({ usage }: { usage: UsageRow[] }) {
 /*  Credit purchase — with pricing tiers                               */
 /* ------------------------------------------------------------------ */
 
-const PLANS = [
-  { tier: "Lite",     credits: 100,  price: "$9.99",  perCredit: "$0.10", bestValue: false },
-  { tier: "Standard", credits: 300,  price: "$24.99", perCredit: "$0.08", bestValue: true },
-  { tier: "Pro",      credits: 1000, price: "$59.99", perCredit: "$0.06", bestValue: false },
-] as const;
-
 function CreditPurchaseSection({
   checkoutHref,
   checkoutUrl,
   hasCredits,
+  plans,
 }: {
   checkoutHref: string;
   checkoutUrl: string;
   hasCredits: boolean;
-  email: string;
+  plans: {
+    tier: "Lite" | "Standard" | "Pro";
+    credits: number;
+    price: string;
+  }[];
   userId: string;
 }) {
   const [selected, setSelected] = useState(0);
-  const plan = PLANS[selected];
+  const plan = plans[selected] ?? plans[0];
+
+  const selectedCheckoutHref = useMemo(() => {
+    if (!checkoutHref) return checkoutHref;
+    try {
+      const url = new URL(checkoutHref);
+      url.searchParams.set("checkout[custom][selected_plan]", plan.tier.toLowerCase());
+      url.searchParams.set("checkout[custom][selected_credits]", String(plan.credits));
+      return url.toString();
+    } catch {
+      return checkoutHref;
+    }
+  }, [checkoutHref, plan]);
 
   return (
     <section className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 via-slate-950/70 to-indigo-950/40 p-6 shadow-[0_0_48px_-12px_rgba(139,92,246,0.2)] md:p-8">
@@ -378,7 +395,7 @@ function CreditPurchaseSection({
 
       {/* Selectable pricing cards */}
       <div className="mt-6 grid gap-3 md:grid-cols-3 md:gap-4">
-        {PLANS.map((p, i) => {
+        {plans.map((p, i) => {
           const isSelected = i === selected;
           return (
             <button
@@ -391,7 +408,7 @@ function CreditPurchaseSection({
                   : "border-slate-700/50 bg-slate-900/40 hover:border-slate-600/70"
               }`}
             >
-              {p.bestValue && (
+              {p.tier === "Standard" && (
                 <span className="absolute -top-2.5 left-3 rounded-full bg-violet-500 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-white">
                   Best value
                 </span>
@@ -407,16 +424,21 @@ function CreditPurchaseSection({
                 <span className="ml-1 text-sm font-normal text-slate-400">credits</span>
               </p>
               <p className={`mt-1 text-lg font-semibold tabular-nums ${isSelected ? "text-violet-300" : "text-slate-400"}`}>{p.price}</p>
-              <p className="mt-auto pt-2 text-xs text-slate-500">{p.perCredit} / credit</p>
+              <p className="mt-auto pt-2 text-xs text-slate-500">
+                ${(Number(p.price.replace("$", "")) / p.credits).toFixed(3)} / credit
+              </p>
             </button>
           );
         })}
       </div>
 
       <div className="mt-8 flex flex-col items-center gap-3 md:items-start">
+        <p className="text-xs text-violet-200/90">
+          Selected plan: <span className="font-semibold">{plan.tier}</span> ({plan.credits.toLocaleString()} credits)
+        </p>
         {checkoutUrl ? (
           <a
-            href={checkoutHref}
+            href={selectedCheckoutHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-violet-500 px-8 py-3.5 text-base font-semibold text-white shadow-[0_0_32px_-8px_rgba(139,92,246,0.5)] transition hover:bg-violet-400 md:w-auto md:text-lg"
